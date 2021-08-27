@@ -1,7 +1,7 @@
 import hmac
 import sqlite3
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 from flask_cors import CORS, cross_origin
 
@@ -23,13 +23,15 @@ def init_user_table():
     conn = sqlite3.connect('reservation.db')
     print("Opened database successfully")
 
-    conn.execute("CREATE TABLE IF NOT EXISTS clients(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS borders(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "client_name TEXT NOT NULL,"
                  "client_surname TEXT NOT NULL,"
                  "client_username TEXT NOT NULL,"
                  "client_password TEXT NOT NULL, address TEXT NOT NULL, "
                  "phone_number INT NOT NULL,"
-                 " client_email TEXT NOT NULL)")
+                 " client_email TEXT NOT NULL,"
+                 "id_flight INTEGER,"
+                 "FOREIGN KEY (id_flight)REFERENCES boarding_tickets(id_flight))")
     print("user table created")
     conn.close()
 
@@ -46,49 +48,52 @@ def init_post_table():
     print("Login table created successfully.")
 
 
-# Creating Products table----------------------------------------------------
+# Creating flights table----------------------------------------------------
 
 
 def init_product_table():
     with sqlite3.connect('reservation.db') as conn:
-        conn.execute("CREATE TABLE IF NOT EXISTS flight_ticket (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        conn.execute("CREATE TABLE IF NOT EXISTS boarding_tickets(id_flight INTEGER PRIMARY KEY AUTOINCREMENT,"
                      "airline TEXT NOT NULL,"
                      "price TEXT NOT NULL,"
                      "from_where TEXT NOT NULL,"
                      "to_where TEXT NOT NULL,"
                      "duration,"
                      "departure,"
-                     "arrival)")
+                     "accommodation INTEGER,"
+                     "arrival,"
+                     "FOREIGN KEY (accommodation)REFERENCES hotels(accommodation))")
     print("flights table created successfully.")
 
 # inserting accommodation ----------------------------------------------------
 
 
-def init_Accommodation_table():
+def init_accommodation_table():
     with sqlite3.connect('reservation.db') as conn:
-        conn.execute("CREATE TABLE IF NOT EXISTS hotel (accommodation INTEGER PRIMARY KEY AUTOINCREMENT,"
+        conn.execute("CREATE TABLE IF NOT EXISTS hotels (accommodation INTEGER PRIMARY KEY AUTOINCREMENT,"
                      "address,"
                      "rooms TEXT NOT NULL,"
-                     "pricing TEXT NOT NULL,"
-                     "bathrooms TEXT NOT NULL,"
+                     "price TEXT NOT NULL,"
+                     "bathroom TEXT NOT NULL,"
                      "parking,"
-                     "images,"
+                     "image,"
                      "check_in,"
                      "check_out)")
     print("accommodation table created successfully.")
 
 # tables---------------------------------------------------------------
 
+
 init_product_table()
 init_user_table()
-init_Accommodation_table()
+init_accommodation_table()
 init_post_table()
 
 
 def fetch_users():
     with sqlite3.connect('reservation.db') as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM clients")
+        cursor.execute("SELECT * FROM borders")
         users = cursor.fetchall()
 
         new_data = []
@@ -98,10 +103,10 @@ def fetch_users():
     return new_data
 
 
-clients = fetch_users()
+borders = fetch_users()
 
-username_table = {u.username: u for u in clients}
-userid_table = {u.id: u for u in clients}
+username_table = {u.username: u for u in borders}
+userid_table = {u.id: u for u in borders}
 
 
 def authenticate(username, password):
@@ -129,11 +134,6 @@ def protected():
     return '%s' % current_identity
 
 
-@app.route('/login/', methods=['GET', 'POST'])
-def login():
-    return render_template('/login.html')
-
-
 @app.route('/client-registration/', methods=["POST"])
 def user_registration():
     response = {}
@@ -149,7 +149,7 @@ def user_registration():
 
         with sqlite3.connect("reservation.db") as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO clients("
+            cursor.execute("INSERT INTO borders("
                            "client_name,"
                            "client_surname,"
                            "client_username,"
@@ -163,9 +163,11 @@ def user_registration():
 
         return response
 
+# creating flights---------------------------------------------------------------------------
+
 
 @app.route('/create-flights/', methods=["POST"])
-#@jwt_required()
+# @jwt_required()
 def create_products():
     response = {}
 
@@ -180,7 +182,7 @@ def create_products():
 
         with sqlite3.connect('reservation.db') as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO flight_ticket("
+            cursor.execute("INSERT INTO boarding_tickets("
                            "airline,"
                            "price,"
                            "from_where, to_where, duration, departure, arrival) VALUES(?, ?, ?, ?, ?, ?, ?)", (airline, price, from_where, to_where, duration, departure, arrival))
@@ -189,10 +191,11 @@ def create_products():
             response['description'] = "flight added successfully"
         return response
 
-# creating accommodation
+# creating accommodation----------------------------------------------------------
 
-@app.route('/creating-hotel/', methods=["POST"])
-def user_hotel():
+
+@app.route('/creating-hotels/', methods=["POST"])
+def user_hotels():
     response = {}
 
     if request.method == "POST":
@@ -207,15 +210,16 @@ def user_hotel():
 
         with sqlite3.connect("reservation.db") as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO hotel("
-                           "addreses,"
+            cursor.execute("INSERT INTO hotels("
+                           "address,"
                            "rooms,"
                            "price,"
                            "bathroom,"
+                           "parking,"
                            "image,"
                            "check_in,"
-                           "check_out) VALUES(?, ?, ?, ?, ?, ?,?)",
-                           (address, rooms, price, bathroom, parking,image, check_in, check_out))
+                           "check_out) VALUES(?, ?, ?, ?, ?, ?,?, ?)",
+                           (address, rooms, price, bathroom, parking, image, check_in, check_out))
             conn.commit()
             response["message"] = "success"
             response["status_code"] = 201
@@ -225,14 +229,14 @@ def user_hotel():
 # Getting users
 
 
-@app.route('/get-clients/', methods=["GET"])
+@app.route('/get-borders/', methods=["GET"])
 def get_users():
     response = {}
     with sqlite3.connect("reservation.db") as conn:
         cursor = conn.cursor()
         cursor.row_factory = sqlite3.Row
 
-        cursor.execute("SELECT * FROM clients")
+        cursor.execute("SELECT * FROM borders")
 
         posts = cursor.fetchall()
         accumulator = []
@@ -244,6 +248,8 @@ def get_users():
     response['data'] = tuple(accumulator)
     return jsonify(response)
 
+# get flights
+
 
 @app.route('/get-flight/', methods=["GET"])
 @cross_origin()
@@ -252,7 +258,30 @@ def get_point_of_sales():
     with sqlite3.connect("reservation.db") as conn:
         cursor = conn.cursor()
         cursor.row_factory = sqlite3.Row
-        cursor.execute("SELECT * FROM flight_ticket ")
+        cursor.execute("SELECT * FROM boarding_tickets ")
+
+        posts = cursor.fetchall()
+
+        accumulator = []
+
+        for i in posts:
+            accumulator.append({k: i[k] for k in i.keys()})
+
+    response['status_code'] = 200
+    response['data'] = tuple(accumulator)
+    return jsonify(response)
+
+# get hotels
+
+
+@app.route('/get-hotels/', methods=["GET"])
+@cross_origin()
+def get_hotels():
+    response = {}
+    with sqlite3.connect("reservation.db") as conn:
+        cursor = conn.cursor()
+        cursor.row_factory = sqlite3.Row
+        cursor.execute("SELECT * FROM hotels ")
 
         posts = cursor.fetchall()
 
@@ -268,9 +297,8 @@ def get_point_of_sales():
 # Updating flights
 
 
-
 @app.route('/update-flights/<int:post_id>/', methods=["PUT"])
-#@jwt_required()
+# @jwt_required()
 def edit_post(post_id):
     response = {}
 
