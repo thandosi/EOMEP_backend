@@ -274,7 +274,8 @@ def get_point_of_sales():
 # get hotels
 
 
-@app.route('/get-hotels/', methods=["GET"])
+@app.route(''
+           '.', methods=["GET"])
 @cross_origin()
 def get_hotels():
     response = {}
@@ -371,6 +372,22 @@ def edit_post(post_id):
 
                                             response["description"] = "arrival was updated successfully"
                                             response["status_code"] = 200
+    return response
+
+# deleting
+
+
+@app.route("/delete-products/<int:accommodation>/", methods=["PUT"])
+#@jwt_required()
+def delete_post(accommodation):
+    response = {}
+    if request.method == "PUT":
+        with sqlite3.connect("reservation.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM hotels WHERE accommodation=" + str(accommodation))
+            conn.commit()
+            response['status_code'] = 200
+            response['message'] = "deleted successfully."
     return response
 
 
