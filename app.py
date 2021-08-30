@@ -274,8 +274,7 @@ def get_point_of_sales():
 # get hotels
 
 
-@app.route(''
-           '.', methods=["GET"])
+@app.route('/get-hotels/', methods=["GET"])
 @cross_origin()
 def get_hotels():
     response = {}
