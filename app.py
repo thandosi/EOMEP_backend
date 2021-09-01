@@ -38,6 +38,16 @@ def init_user_table():
     print("user table created")
     conn.close()
 
+# creating admin log ----------------------------------------
+
+
+def init_admin_table():
+    with sqlite3.connect('reservation.db') as conn:
+        conn.execute("CREATE TABLE IF NOT EXISTS admin (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                     "admin_username TEXT NOT NULL,"
+                     "admin_password TEXT NOT NULL)")
+    print("Login table created successfully.")
+
 
 # Creating Login table-------------------------------------------------------
 
@@ -91,6 +101,7 @@ init_product_table()
 init_user_table()
 init_accommodation_table()
 init_post_table()
+init_admin_table()
 
 
 def fetch_users():
@@ -138,6 +149,7 @@ def protected():
 
 
 @app.route('/client-registration/', methods=["POST"])
+@cross_origin()
 def user_registration():
     response = {}
 
@@ -380,7 +392,7 @@ def edit_post(post_id):
 
 
 @app.route("/delete-products/<int:accommodation>/", methods=["PUT"])
-#@jwt_required()
+# @jwt_required()
 def delete_post(accommodation):
     response = {}
     if request.method == "PUT":
