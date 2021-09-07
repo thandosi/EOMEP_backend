@@ -155,13 +155,13 @@ def user_registration():
 
     if request.method == "POST":
         first_name = request.form['client_name']
-        last_name = request.form['client_name']
+        client_surname = request.form['client_surname']
         username = request.form['client_username']
         password = request.form['client_password']
         address = request.form['address']
         phone_number = request.form['phone_number']
         client_email = request.form['client_email']
-
+        id_flight = request.form['id_flight']
         with sqlite3.connect("reservation.db") as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO borders("
@@ -170,8 +170,10 @@ def user_registration():
                            "client_username,"
                            "client_password,"
                            "address,phone_number,"
-                           "client_email) VALUES(?, ?, ?, ?, ?, ?, ?)",
-                           (first_name, last_name, username, password, address, phone_number, client_email))
+                           "id_flight,"
+                           "client_email) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+                           (first_name, client_surname, username, password, address, phone_number, id_flight, client_email
+                            ))
             conn.commit()
             response["message"] = "success"
             response["status_code"] = 201
