@@ -9,7 +9,7 @@ from flask_jwt import JWT, jwt_required, current_identity
 from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resoures={r"/api/*": {"origins": "*"}})
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
 
