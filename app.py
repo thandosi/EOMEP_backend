@@ -155,14 +155,14 @@ def user_registration():
     response = {}
 
     if request.method == "POST":
-        first_name = request.form['client_name']
-        client_surname = request.form['client_surname']
-        username = request.form['client_username']
-        password = request.form['client_password']
-        address = request.form['address']
-        phone_number = request.form['phone_number']
-        client_email = request.form['client_email']
-        id_flight = request.form['id_flight']
+        first_name = request.json['client_name']
+        client_surname = request.json['client_surname']
+        username = request.json['client_username']
+        password = request.json['client_password']
+        address = request.json['address']
+        phone_number = request.json['phone_number']
+        client_email = request.json['client_email']
+        id_flight = request.json['id_flight']
         with sqlite3.connect("reservation.db") as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO borders("
