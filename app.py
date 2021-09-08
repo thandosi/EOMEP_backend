@@ -8,6 +8,11 @@ from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 from flask_cors import CORS, cross_origin
 
+app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+app.debug = True
+app.config['SECRET_KEY'] = 'super-secret'
+
 
 class User(object):
     def __init__(self, id, username, password, client_email, phone_number, address):
@@ -78,7 +83,7 @@ def init_product_table():
                      "FOREIGN KEY (accommodation)REFERENCES hotels(accommodation))")
     print("flights table created successfully.")
 
-# inserting accommodation ----------------------------------------------------
+# Table accommodation ----------------------------------------------------
 
 
 def init_accommodation_table():
@@ -134,11 +139,6 @@ def identity(payload):
     return userid_table.get(user_id, None)
 
 
-app = Flask(__name__)
-CORS(app)
-app.debug = True
-app.config['SECRET_KEY'] = 'super-secret'
-
 jwt = JWT(app, authenticate, identity)
 
 
@@ -147,6 +147,7 @@ jwt = JWT(app, authenticate, identity)
 def protected():
     return '%s' % current_identity
 
+# Client register--------------------------------------------------------------------
 
 @app.route('/client-registration/', methods=["POST"])
 @cross_origin()
