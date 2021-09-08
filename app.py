@@ -31,15 +31,13 @@ def init_user_table():
     conn = sqlite3.connect('reservation.db')
     print("Opened database successfully")
 
-    conn.execute("CREATE TABLE IF NOT EXISTS borders(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS passengers(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "client_name TEXT NOT NULL,"
                  "client_surname TEXT NOT NULL,"
                  "client_username TEXT NOT NULL,"
                  "client_password TEXT NOT NULL, address TEXT NOT NULL, "
                  "phone_number INT NOT NULL,"
-                 " client_email TEXT NOT NULL,"
-                 "id_flight INTEGER,"
-                 "FOREIGN KEY (id_flight)REFERENCES boarding_tickets(id_flight))")
+                 " client_email TEXT NOT NULL)")
     print("user table created")
     conn.close()
 
@@ -112,7 +110,7 @@ init_admin_table()
 def fetch_users():
     with sqlite3.connect('reservation.db') as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM borders")
+        cursor.execute("SELECT * FROM passengers")
         users = cursor.fetchall()
 
         new_data = []
@@ -122,10 +120,10 @@ def fetch_users():
     return new_data
 
 
-borders = fetch_users()
+passengers = fetch_users()
 
-username_table = {u.username: u for u in borders}
-userid_table = {u.id: u for u in borders}
+username_table = {u.username: u for u in passengers}
+userid_table = {u.id: u for u in passengers}
 
 
 def authenticate(username, password):
@@ -162,18 +160,16 @@ def user_registration():
         address = request.json['address']
         phone_number = request.json['phone_number']
         client_email = request.json['client_email']
-        id_flight = request.json['id_flight']
         with sqlite3.connect("reservation.db") as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO borders("
+            cursor.execute("INSERT INTO passengers("
                            "client_name,"
                            "client_surname,"
                            "client_username,"
                            "client_password,"
                            "address,phone_number,"
-                           "id_flight,"
-                           "client_email) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-                           (first_name, client_surname, username, password, address, phone_number, id_flight, client_email
+                           "client_email) VALUES( ?, ?, ?, ?, ?, ?, ?)",
+                           (first_name, client_surname, username, password, address, phone_number, client_email
                             ))
             conn.commit()
             response["message"] = "success"
@@ -247,14 +243,14 @@ def user_hotels():
 # Getting users
 
 
-@app.route('/get-borders/', methods=["GET"])
+@app.route('/get-passengers/', methods=["GET"])
 def get_users():
     response = {}
     with sqlite3.connect("reservation.db") as conn:
         cursor = conn.cursor()
         cursor.row_factory = sqlite3.Row
 
-        cursor.execute("SELECT * FROM borders")
+        cursor.execute("SELECT * FROM passengers")
 
         posts = cursor.fetchall()
         accumulator = []
