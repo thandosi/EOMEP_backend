@@ -263,31 +263,6 @@ def get_users():
     return jsonify(response)
 
 
-# get flights
-@app.route('/get-user', methods='PATCH')
-@cross_origin()
-def user_login():
-    response = {}
-    if request.method == 'PATCH':
-        try:
-            username = request.json['username']
-            password = request.json['password']
-
-            with sqlite3.connect('reservation.db') as conn:
-                cursor = conn.cursor()
-                cursor.row_factory = sqlite3.Row
-                cursor.execute('SELECT * FROM passengers WHERE username=? AND password=?', (username, password))
-                post = cursor.fetchone()
-                response['status_code'] = 200
-                response['message'] = 'Account' + str(username) + 'collected'
-                response['data'] = post
-                return response
-        except ValueError:
-            response['message'] = 'Please enter correct username or password !'
-            response['status_code'] = 400
-            return response
-
-
 @app.route('/get-flight/', methods=["GET"])
 @cross_origin()
 def get_point_of_sales():
@@ -429,3 +404,5 @@ def delete_post(accommodation):
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
+# git_token: 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
